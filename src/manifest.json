@@ -1,0 +1,38 @@
+{
+    "manifest_version": 2,
+    "name": "__MSG_appName__",
+    "description": "__MSG_appDesc__",
+    "version": "3.10.6",
+    "default_locale": "en",
+    "offline_enabled": true,
+    "permissions": ["alarms", "storage"],
+    "web_accessible_resources": ["style/images/icon-64.png"],
+    "icons": {
+        "16": "style/images/icon-16.png",
+        "64": "style/images/icon-64.png",
+        "128": "style/images/icon-128.png"
+    },
+    "background": {
+        "scripts": ["scripts/background.js"],
+        "persistent": false
+    },
+    "browser_action": {
+        "default_icon": {
+            "16": "style/images/icon-16.png",
+            "64": "style/images/icon-64.png",
+            "128": "style/images/icon-128.png"
+        },
+        "default_title": "__MSG_appName__"
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{5f590989-34a7-4c7a-b219-5de25a64db43}",
+            "strict_min_version": "140.0",
+            "data_collection_permissions": {
+                "required": [
+                    "none"
+                ]
+            }
+        }
+    }
+}
