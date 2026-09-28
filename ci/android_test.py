@@ -113,7 +113,7 @@ def skip_first_run_screens():
         if find(r'Search or enter address|mozac_browser_toolbar_url_view|toolbar_wrapper'):
             return True
         if tap(r"^(Not now|Not Now|Skip|Maybe later|No thanks|Continue|Got it|"
-               r"Close|Dismiss|Start browsing|Allow|Don.t allow)$", timeout=3):
+               r"Close|Dismiss|Start browsing|Allow|Don.t allow|Cancel)$", timeout=3):
             shot(f'welcome-step-{i + 1}')
         else:
             time.sleep(2)
