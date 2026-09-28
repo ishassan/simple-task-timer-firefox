@@ -186,9 +186,16 @@ def main():
     shot('installed-page')
 
     # Open the main page the way a user would: menu, Extensions, Task Timer.
-    opened = open_menu() and tap(r'^(Extensions|Add-ons)$') and tap(r'^Task Timer$')
+    # In the menu, "Extensions" is a collapsed row; tapping it shows the list.
+    opened = (open_menu() and tap(r'mainMenu\.extensions|^Extensions')
+              and (shot('extensions-menu') or True) and tap(r'^Task Timer$'))
     time.sleep(4)
     shot('after-menu')
+    if not opened:
+        # Backup route: the "installed" page links to the main page.
+        back()
+        opened = tap(r'^Take me to Task Timer$')
+        time.sleep(4)
     # The add-on opens the page in a new tab; switch to it if Firefox stayed put.
     if opened and not find(r'Add Task|Task Name|new-txt'):
         tap(r'TabCounterTestTags.tabCounter|ADDRESSBAR_TABS_COUNTER', timeout=5)
