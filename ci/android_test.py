@@ -203,6 +203,12 @@ def main():
         shot('tabs')
         opened = tap(r'^(?!Thanks).*(Task Timer|main\.html)', timeout=5)
         time.sleep(3)
+    # On narrow screens the add-on asks once whether to use icons instead of
+    # buttons. Answer OK, as a phone user would.
+    if find(r'running Task Timer in a small window'):
+        shot('small-screen-question')
+        tap(r'^OK$', timeout=5)
+        time.sleep(2)
     shot('main-page')
     record('Opened the main page from the Firefox menu', opened)
 
