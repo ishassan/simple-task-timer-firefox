@@ -212,11 +212,13 @@ def main():
     shot('main-page')
     record('Opened the main page from the Firefox menu', opened)
 
-    # Add a task and start it.
-    added = tap(r'Task Name')
+    # Add a task that starts right away, so the next screenshot shows the timer.
+    added = tap(r'^new-txt$')
     if added:
         adb('shell', 'input', 'text', 'Android%stest%stask')
-        added = tap(r'^Add Task$')
+        back()  # hide the keyboard
+        tap(r'^new-start$', timeout=5)
+        added = tap(r'^new-btn$')
     time.sleep(2)
     shot('task-added')
     record('Added a task', added and bool(find(r'Android test task')))
