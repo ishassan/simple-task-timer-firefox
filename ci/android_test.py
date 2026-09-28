@@ -65,6 +65,15 @@ def find(pattern):
     return None
 
 
+def close_not_responding_popup():
+    """The slow emulator often shows "<app> isn't responding"; choose Wait."""
+    pos = find(r'^android:id/aerr_wait$')
+    if pos:
+        adb('shell', 'input', 'tap', str(pos[0]), str(pos[1]))
+        time.sleep(1.5)
+    return bool(pos)
+
+
 def tap(pattern, timeout=10):
     end = time.time() + timeout
     while time.time() < end:
@@ -73,6 +82,7 @@ def tap(pattern, timeout=10):
             adb('shell', 'input', 'tap', str(pos[0]), str(pos[1]))
             time.sleep(1.5)
             return True
+        close_not_responding_popup()
         time.sleep(1)
     print(f'not found: {pattern}')
     return False
@@ -99,11 +109,13 @@ def open_menu():
 
 def skip_first_run_screens():
     """Close the welcome screens and permission prompts until the home screen shows."""
-    for _ in range(15):
+    for i in range(20):
         if find(r'Search or enter address|mozac_browser_toolbar_url_view|toolbar_wrapper'):
             return True
-        if not tap(r"^(Not now|Not Now|Skip|Maybe later|No thanks|Continue|Got it|"
-                   r"Close|Dismiss|Start browsing|Allow|Don.t allow)$", timeout=3):
+        if tap(r"^(Not now|Not Now|Skip|Maybe later|No thanks|Continue|Got it|"
+               r"Close|Dismiss|Start browsing|Allow|Don.t allow)$", timeout=3):
+            shot(f'welcome-step-{i + 1}')
+        else:
             time.sleep(2)
     return False
 
@@ -125,6 +137,10 @@ def enable_remote_debugging():
 def main():
     os.makedirs(OUT, exist_ok=True)
     adb('wait-for-device')
+    # Hide "<app> isn't responding" popups; the slow emulator triggers them a lot.
+    adb('shell', 'settings', 'put', 'global', 'hide_error_dialogs', '1', check=False)
+    time.sleep(20)  # let the home screen finish starting
+    close_not_responding_popup()
     adb('install', '-r', APK)
     adb('shell', 'monkey', '-p', PKG, '-c', 'android.intent.category.LAUNCHER', '1')
     time.sleep(10)
