@@ -110,7 +110,8 @@ def open_menu():
 def skip_first_run_screens():
     """Close the welcome screens and permission prompts until the home screen shows."""
     for i in range(20):
-        if find(r'Search or enter address|mozac_browser_toolbar_url_view|toolbar_wrapper'):
+        if find(r'Search or enter address|ADDRESSBAR_URL_BOX|composable_toolbar|'
+                r'mozac_browser_toolbar_url_view'):
             return True
         if tap(r"^(Not now|Not Now|Skip|Maybe later|No thanks|Continue|Got it|"
                r"Close|Dismiss|Start browsing|Allow|Don.t allow|Cancel)$", timeout=3):
@@ -172,15 +173,29 @@ def main():
         adb('logcat', '-d', check=False)
         return finish()
 
-    # On install, the add-on opens its "installed" page in a new tab.
+    # Firefox shows a "Task Timer was added" sheet; close it.
     time.sleep(8)
     shot('after-install')
-    record('Opened the "installed" page by itself',
-           bool(find(r'Task Timer|installed')))
+    tap(r'^OK$', timeout=5)
+
+    # On install, the add-on's background code opens its "installed" page in a
+    # new tab. Firefox lists that tab on the home screen.
+    record('The add-on opened its "installed" page by itself',
+           tap(r'Thanks for installing Task Timer'))
+    time.sleep(3)
+    shot('installed-page')
 
     # Open the main page the way a user would: menu, Extensions, Task Timer.
-    opened = open_menu() and tap(r'^(Extensions|Add-ons)$') and tap(r'Task Timer')
+    opened = open_menu() and tap(r'^(Extensions|Add-ons)$') and tap(r'^Task Timer$')
     time.sleep(4)
+    shot('after-menu')
+    # The add-on opens the page in a new tab; switch to it if Firefox stayed put.
+    if opened and not find(r'Add Task|Task Name|new-txt'):
+        tap(r'TabCounterTestTags.tabCounter|ADDRESSBAR_TABS_COUNTER', timeout=5)
+        time.sleep(2)
+        shot('tabs')
+        opened = tap(r'^(?!Thanks).*(Task Timer|main\.html)', timeout=5)
+        time.sleep(3)
     shot('main-page')
     record('Opened the main page from the Firefox menu', opened)
 
