@@ -1,0 +1,58 @@
+# Loads the add-on into Firefox for Android on an emulator and saves
+# screenshots, so a person can check that it works on Android.
+# The screenshots are in the "android-screenshots" artifact of each run.
+name: Android test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'ci/**'
+      - '.github/workflows/android-test.yml'
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      FENIX_VERSION: '156.0.1'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install web-ext
+        run: npm install -g web-ext@10
+
+      - name: Download Firefox for Android
+        run: >
+          curl -fsSL -o firefox.apk
+          "https://ftp.mozilla.org/pub/fenix/releases/${FENIX_VERSION}/android/fenix-${FENIX_VERSION}-android-x86_64/fenix-${FENIX_VERSION}.multi.android-x86_64.apk"
+
+      # The emulator needs hardware acceleration (KVM) to run at a usable speed.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run the test on the emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -no-snapshot -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: python3 ci/android_test.py
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-screenshots
+          path: ci-out/
